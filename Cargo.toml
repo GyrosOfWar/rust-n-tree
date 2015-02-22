@@ -9,3 +9,6 @@ authors = ["Jonathan Reem <jonathan.reem@gmail.com>"]
 name = "ntree"
 path = "src/lib.rs"
 
+[dependencies]
+rand = "*"
+rand_macros = "*"

@@ -1,4 +1,4 @@
-#![license = "MIT"]
+//#![license = "MIT"]
 #![deny(missing_docs)]
 #![deny(warnings)]
 
@@ -120,7 +120,7 @@ impl<P, R: Region<P>> NTree<R, P> {
     pub fn nearby<'a>(&'a self, point: &P) -> Option<&'a[P]> {
         if self.region.contains(point) {
             match self.kind {
-                Bucket { ref points, .. } => Some(points.as_slice()),
+                Bucket { ref points, .. } => Some(&points[..]),
                 Branch { ref subregions } => {
                     subregions
                         .iter()
@@ -167,16 +167,17 @@ fn split_and_insert<P, R: Region<P>>(bucket: &mut NTree<R, P>, point: P) {
 // children of the parents of the current point.
 pub struct RangeQuery<'t,'q, R: 'q + 't, P: 't> {
     query: &'q R,
-    points: slice::Items<'t, P>,
-    stack: Vec<slice::Items<'t, NTree<R, P>>>
+    points: slice::Iter<'t, P>,
+    stack: Vec<slice::Iter<'t, NTree<R, P>>>
 }
 
-impl<'t, 'q, R: Region<P>, P> Iterator<&'t P> for RangeQuery<'t, 'q, R, P> {
+impl<'t, 'q, R: Region<P>, P> Iterator for RangeQuery<'t, 'q, R, P> {
+    type Item = &'t P;
     fn next(&mut self) -> Option<&'t P> {
         'outer: loop {
             // try to find the next point in the region we're
             // currently examining.
-            for p in self.points {
+            for p in self.points.by_ref() {
                 if self.query.contains(p) {
                     return Some(p)
                 }

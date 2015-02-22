@@ -1,8 +1,9 @@
-#![feature(macro_rules)]
+#![feature(test)]
 extern crate ntree;
 extern crate test;
+extern crate rand;
 
-use std::rand::{mod, XorShiftRng, Rng};
+use rand::{XorShiftRng, Rng};
 use test::Bencher;
 
 use ntree::{NTree, Region};
@@ -16,7 +17,7 @@ use self::fixtures::{QuadTreeRegion, Vec2};
 #[test] fn test_insert() {
     let mut ntree = NTree::new(QuadTreeRegion::square(0.0, 0.0, 100.0), 4);
     assert!(ntree.insert(Vec2 { x: 50.0, y: 50.0 }));
-    assert_eq!(ntree.nearby(&Vec2 { x: 40.0, y: 40.0 }), Some([Vec2 { x: 50.0, y: 50.0 }][]));
+    assert_eq!(ntree.nearby(&Vec2 { x: 40.0, y: 40.0 }), Some(&[Vec2 { x: 50.0, y: 50.0 }][..]));
 }
 
 #[test] fn test_nearby() {
@@ -38,18 +39,18 @@ use self::fixtures::{QuadTreeRegion, Vec2};
 
     // Bottom left corner
     assert_eq!(ntree.nearby(&Vec2 { x: 40.0, y: 40.0 }),
-        Some([Vec2 { x: 30.0, y: 30.0 },
+        Some(&[Vec2 { x: 30.0, y: 30.0 },
               Vec2 { x: 20.0, y: 20.0 },
-              Vec2 { x: 10.0, y: 10.0 }][]));
+              Vec2 { x: 10.0, y: 10.0 }][..]));
 
     // Top right corner
-    assert_eq!(ntree.nearby(&Vec2 { x: 90.0, y: 90.0 }), Some([Vec2 { x: 75.0, y: 75.0 }][]));
+    assert_eq!(ntree.nearby(&Vec2 { x: 90.0, y: 90.0 }), Some(&[Vec2 { x: 75.0, y: 75.0 }][..]));
 
     // Top left corner
-    assert_eq!(ntree.nearby(&Vec2 { x: 20.0, y: 80.0 }), Some([Vec2 { x: 40.0, y: 70.0 }][]));
+    assert_eq!(ntree.nearby(&Vec2 { x: 20.0, y: 80.0 }), Some(&[Vec2 { x: 40.0, y: 70.0 }][..]));
 
     // Bottom right corner
-    assert_eq!(ntree.nearby(&Vec2 { x: 94.0, y: 12.0 }), Some([Vec2 { x: 80.0, y: 20.0 }][]));
+    assert_eq!(ntree.nearby(&Vec2 { x: 94.0, y: 12.0 }), Some(&[Vec2 { x: 80.0, y: 20.0 }][..]));
 }
 
 #[test] fn test_range_query() {
@@ -73,11 +74,11 @@ use self::fixtures::{QuadTreeRegion, Vec2};
                     Vec2 { x: 60.0, y: 20.0 }]);
 }
 
-fn range_query_bench(b: &mut Bencher, n: uint) {
+fn range_query_bench(b: &mut Bencher, n: usize) {
     let mut rng: XorShiftRng = rand::random();
 
     let mut ntree = NTree::new(QuadTreeRegion::square(0.0, 0.0, 1.0), 4);
-    for _ in range(0u, n) {
+    for _ in (0..n) {
         ntree.insert(Vec2 { x: rng.gen(), y: rng.gen() });
     }
 
@@ -88,7 +89,7 @@ fn range_query_bench(b: &mut Bencher, n: uint) {
             width: rng.gen(),
             height: rng.gen()
         };
-        for p in ntree.range_query(&r) { test::black_box(p) }
+        for p in ntree.range_query(&r) { test::black_box(p); }
     })
 }
 
@@ -108,7 +109,7 @@ fn bench_range_query_large(b: &mut Bencher) {
 mod fixtures {
     use ntree::Region;
 
-    #[deriving(Clone, Show, PartialEq)]
+    #[derive(Clone, Debug, PartialEq)]
     pub struct QuadTreeRegion {
         pub x: f64,
         pub y: f64,
@@ -116,7 +117,7 @@ mod fixtures {
         pub height: f64
     }
 
-    #[deriving(Show, PartialEq, Clone)]
+    #[derive(Debug, PartialEq, Clone)]
     pub struct Vec2 {
         pub x: f64, pub y:f64
     }
